@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Victor RPG 2026</title>
+  <meta name="theme-color" content="#111111">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root { --bg:#0b0b10; --card:#141423; --text:#f2f2f2; --muted:#a9a9b6; --good:#2bd576; --bad:#ff4d4d; --accent:#7c5cff; --line:#25253a; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text)}
+    header{padding:18px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(11,11,16,.95);backdrop-filter: blur(10px);z-index:5}
+    h1{margin:0;font-size:18px}
+    .sub{margin-top:4px;color:var(--muted);font-size:12px}
+    main{padding:16px;max-width:980px;margin:0 auto}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media (min-width:920px){ .grid{grid-template-columns:1fr 1fr} }
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .pill{padding:6px 10px;border-radius:999px;border:1px solid #2f2f48;color:var(--muted);font-size:12px}
+    .big{font-size:28px;font-weight:800}
+    .divider{height:1px;background:var(--line);margin:10px 0}
+    .bar{height:10px;background:#23233a;border-radius:999px;overflow:hidden;border:1px solid #2f2f48}
+    .bar>div{height:100%}
+    .btns{display:flex;gap:8px;flex-wrap:wrap}
+    button{background:#1c1c2c;color:var(--text);border:1px solid #2f2f48;border-radius:10px;padding:10px 12px;font-weight:750}
+    button:active{transform:scale(.99)}
+    .goodB{border-color:rgba(43,213,118,.35)}
+    .badB{border-color:rgba(255,77,77,.35)}
+    .mini{font-size:12px;color:var(--muted);margin-top:6px}
+    .quest{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;border:1px solid #2a2a42;margin-top:8px}
+    .quest.locked{opacity:.55}
+    .quest input{width:18px;height:18px}
+    .quest .meta{margin-left:auto;text-align:right;font-size:12px;color:var(--muted)}
+    .tag{font-size:11px;border:1px solid #2f2f48;border-radius:999px;padding:4px 8px;color:var(--muted)}
+    .tag.core{border-color:rgba(124,92,255,.45);color:#c9c0ff}
+    .tag.virtue{border-color:rgba(43,213,118,.35);color:#baf6d3}
+    .tag.rule{border-color:rgba(255,77,77,.35);color:#ffd0d0}
+    textarea, input[type="text"], input[type="number"], input[type="time"]{
+      width:100%; background:#10101b; color:var(--text); border:1px solid #2f2f48; border-radius:10px; padding:10px;
+    }
+    .skills{display:grid;grid-template-columns:1fr;gap:10px}
+    @media (min-width:920px){ .skills{grid-template-columns:1fr 1fr} }
+    .skill{border:1px solid #2a2a42;border-radius:12px;padding:10px;background:#121224}
+    .skillTitle{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+    .skillTitle b{font-size:14px}
+    .skillBtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#0f0f18;border:1px solid #2f2f48;border-radius:12px;padding:10px 12px;font-size:13px;color:var(--text);opacity:0;pointer-events:none;transition:.2s;z-index:20}
+    .toast.show{opacity:1}
+    .list{margin:0;padding-left:16px;color:var(--muted);font-size:13px}
+  </style>
+</head>
+
+<body>
+<header>
+  <h1>Victor RPG 2026</h1>
+  <div class="sub" id="todayLine">Cargando…</div>
+</header>
+
+<main>
+  <div class="grid">
+    <!-- Character -->
+    <section class="card">
+      <div class="row">
+        <div>
+          <div class="mini">Personaje</div>
+          <div class="big" id="name">Victor</div>
+          <div class="mini">Nivel <b id="level">1</b> • Racha <b id="streak">0</b> días • Rango: <b id="rank">Novato</b></div>
+        </div>
+        <div class="pill">Curfew: <b id="curfewShow">12:30 AM</b></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row">
+        <div style="flex:1;min-width:240px">
+          <div class="row"><div>HP</div><div><b id="hp">100</b>/100</div></div>
+          <div class="bar"><div id="hpBar" style="width:100%;background:var(--good)"></div></div>
+          <div class="mini">Te baja por “malos hábitos”. Recuperas con rachas y level ups.</div>
+        </div>
+        <div style="flex:1;min-width:240px">
+          <div class="row"><div>XP</div><div><b id="xp">0</b>/<span id="xpTo">100</span></div></div>
+          <div class="bar"><div id="xpBar" style="width:0%;background:var(--accent)"></div></div>
+          <div class="mini">Subes nivel cada <b>100 XP</b>.</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row">
+        <div class="pill">Oro: <b id="gold">0</b></div>
+        <div class="pill">Disciplina: <b id="disc">0</b></div>
+        <div class="pill">Time Mgmt: <b id="tm">0</b></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="btns">
+        <button class="goodB" id="endDayBtn">Finalizar día</button>
+        <button id="resetTodayBtn">Reiniciar hoy</button>
+        <button id="settingsBtn">Ajustes</button>
+        <button class="badB" id="hardResetBtn">Reset total</button>
+      </div>
+
+      <div class="mini">
+        Regla clave: <b>Gaming se desbloquea solo si completas las 3 misiones Core</b> (Gym + Comer + Dormir).
+      </div>
+    </section>
+
+    <!-- Quests -->
+    <section class="card">
+      <div class="row">
+        <div>
+          <div class="mini">Misiones de hoy</div>
+          <div class="mini">✅ = XP • ❌ = daño HP. “Core” decide si tu día cuenta para la racha.</div>
+        </div>
+        <button id="addQuestBtn">+ Añadir</button>
+      </div>
+
+      <div id="quests"></div>
+
+      <div class="divider"></div>
+
+      <div class="mini">Notas del día</div>
+      <textarea id="notes" rows="3" placeholder="Ej: hoy dormí tarde por X… mañana cierro pantalla 12:15"></textarea>
+      <div class="mini">Se guarda por fecha.</div>
+    </section>
+  </div>
+
+  <!-- Skills -->
+  <section class="card" style="margin-top:12px">
+    <div class="row">
+      <div>
+        <div class="mini">Skills</div>
+        <div class="mini">Suben por sesiones. Cada nivel de skill te da <b>+10 XP global</b> (motivación real).</div>
+      </div>
+      <button id="addSkillBtn">+ Añadir skill</button>
+    </div>
+    <div class="divider"></div>
+    <div class="skills" id="skills"></div>
+  </section>
+
+  <!-- Loot -->
+  <section class="card" style="margin-top:12px">
+    <div class="row">
+      <div>
+        <div class="mini">Loot & Recompensas</div>
+        <div class="mini">In-game + real. (Ej: comida en la calle al 3er día de racha ✅)</div>
+      </div>
+      <button id="claimLootBtn">Ver / Reclamar</button>
+    </div>
+    <div class="divider"></div>
+    <ul class="list" id="lootList"></ul>
+  </section>
+
+  <!-- History -->
+  <section class="card" style="margin-top:12px">
+    <div class="row">
+      <div>
+        <div class="mini">Historial (últimos 7 días)</div>
+        <div class="mini">Para ver consistencia sin volverte loco.</div>
+      </div>
+      <button id="exportBtn">Exportar JSON</button>
+    </div>
+    <div class="divider"></div>
+    <div id="history" class="mini"></div>
+  </section>
+
+  <!-- Settings modal -->
+  <dialog id="settingsDialog" style="border:none;border-radius:14px;max-width:520px;width:92%;background:#0f0f18;color:var(--text);border:1px solid var(--line);">
+    <form method="dialog" style="padding:14px;margin:0">
+      <div class="row">
+        <b>Ajustes</b>
+        <button value="cancel">Cerrar</button>
+      </div>
+      <div class="divider"></div>
+
+      <label class="mini">Nombre del personaje</label>
+      <input type="text" id="nameInput" placeholder="Victor" />
+
+      <div class="divider"></div>
+
+      <label class="mini">Hora meta para dormir (curfew)</label>
+      <input type="time" id="curfewInput" />
+
+      <div class="mini">Tip: ahora está en <b>12:30 AM</b>, y luego lo puedes mover a más temprano.</div>
+
+      <div class="divider"></div>
+
+      <div class="row">
+        <button id="saveSettingsBtn" class="goodB" value="ok">Guardar</button>
+        <button value="cancel">Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+/** ===== Helpers ===== **/
+const TZ = "America/Chicago";
+function todayKey(){
+  const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year:"numeric", month:"2-digit", day:"2-digit" });
+  return fmt.format(new Date());
+}
+function clamp(n,a,b){ return Math.max(a, Math.min(b,n)); }
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function rankFor(level){
+  if(level>=25) return "Legendario";
+  if(level>=15) return "Épico";
+  if(level>=8) return "Raro";
+  if(level>=3) return "Aventurero";
+  return "Novato";
+}
+function fmtTimeTo12h(hhmm){
+  // "00:30" -> "12:30 AM"
+  const [h,m] = hhmm.split(":").map(Number);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = (h % 12) || 12;
+  return `${h12}:${String(m).padStart(2,"0")} ${ampm}`;
+}
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 1800);
+}
+
+/** ===== State ===== **/
+const STORAGE_KEY = "victor_rpg_2026_v2";
+const defaultState = {
+  profile: { name: "Victor" },
+  config: { curfew: "00:30" }, // 12:30 AM
+  game: { hp:100, xp:0, level:1, gold:0, disc:0, tm:0, streak:0, lastDayKey:null },
+  questsTemplate: [
+    // Core 3 (para desbloquear gaming + racha)
+    { id:"q_gym",  name:"Gym / Calistenia", xp:25, hpFail:-15, tag:"core" },
+    { id:"q_food", name:"Comer saludable (dentro del plan)", xp:20, hpFail:-15, tag:"core" },
+    { id:"q_sleep",name:"Dormir antes de la hora meta (curfew)", xp:25, hpFail:-20, tag:"core" },
+
+    // Virtues importantes
+    { id:"q_noporn", name:"No porno hoy", xp:20, hpFail:-25, tag:"virtue" },
+    { id:"q_save",   name:"Ahorrar dinero hoy (aunque sea poco)", xp:20, hpFail:-10, tag:"virtue" },
+    { id:"q_noadd",  name:"Sin hábitos adictivos que rompan rutina", xp:15, hpFail:-15, tag:"virtue" },
+
+    // Gaming (bloqueado hasta completar core 3)
+    { id:"q_game",   name:"Videojuegos con control (solo si Core x3)", xp:15, hpFail:-10, tag:"rule", lockedByCore:true },
+
+    // Bonus que te favorecen (te conozco: calistenia + flex + meal prep)
+    { id:"q_mob",    name:"Movilidad/estiramientos 10 min", xp:10, hpFail:-5, tag:"bonus" },
+    { id:"q_plan",   name:"Plan del día (5 min)", xp:10, hpFail:-3, tag:"bonus" },
+    { id:"q_water",  name:"Agua 2–3L", xp:10, hpFail:-3, tag:"bonus" },
+    { id:"q_future", name:"Algo por tu futuro (papeles/finanzas/aprender)", xp:10, hpFail:-3, tag:"bonus" },
+  ],
+  skills: [
+    { id:"s_handstand", name:"Handstand", xp:0, level:1 },
+    { id:"s_dips", name:"Dips", xp:0, level:1 },
+    { id:"s_pullups", name:"Pull-ups", xp:0, level:1 },
+    { id:"s_mobility", name:"Flexibilidad/Mobility", xp:0, level:1 },
+    { id:"s_core", name:"Core control", xp:0, level:1 },
+    { id:"s_discipline", name:"Disciplina", xp:0, level:1 },
+    { id:"s_finance", name:"Financial IQ", xp:0, level:1 },
+    { id:"s_time", name:"Time Management", xp:0, level:1 },
+  ],
+  loot: {
+    claimed: {}, // key like "streak_3": true
+    rules: [
+      { key:"streak_3",  title:"🍟 Premio real: comida en la calle (1 vez)", requires:{streak:3}, goldBonus:0, xpBonus:10 },
+      { key:"streak_7",  title:"💎 In-game: Badge 'Una Semana'", requires:{streak:7}, goldBonus:50, xpBonus:20 },
+      { key:"streak_14", title:"🛡️ Real: compra pequeña útil (gym/ropa)", requires:{streak:14}, goldBonus:100, xpBonus:30 },
+      { key:"streak_30", title:"🏆 Legendario: premio grande (algo que quieras)", requires:{streak:30}, goldBonus:250, xpBonus:60 }
+    ]
+  },
+  days: {
+    // "YYYY-MM-DD": { questStatus: {id:"done|fail|skip"}, notes:"", summary:{xpGained,hpDelta}, coreDone:0 }
+  }
+};
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return structuredClone(defaultState);
+    const data = JSON.parse(raw);
+    return { ...structuredClone(defaultState), ...data };
+  }catch(e){
+    return structuredClone(defaultState);
+  }
+}
+let state = load();
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+/** ===== Day init ===== **/
+const day = todayKey();
+if(!state.days[day]) state.days[day] = { questStatus:{}, notes:"", summary:{xpGained:0,hpDelta:0}, coreDone:0 };
+save();
+
+/** ===== UI refs ===== **/
+const els = {
+  todayLine: document.getElementById("todayLine"),
+  name: document.getElementById("name"),
+  level: document.getElementById("level"),
+  streak: document.getElementById("streak"),
+  rank: document.getElementById("rank"),
+  hp: document.getElementById("hp"),
+  xp: document.getElementById("xp"),
+  xpTo: document.getElementById("xpTo"),
+  gold: document.getElementById("gold"),
+  disc: document.getElementById("disc"),
+  tm: document.getElementById("tm"),
+  hpBar: document.getElementById("hpBar"),
+  xpBar: document.getElementById("xpBar"),
+  quests: document.getElementById("quests"),
+  notes: document.getElementById("notes"),
+  history: document.getElementById("history"),
+  skills: document.getElementById("skills"),
+  lootList: document.getElementById("lootList"),
+  claimLootBtn: document.getElementById("claimLootBtn"),
+
+  endDayBtn: document.getElementById("endDayBtn"),
+  resetTodayBtn: document.getElementById("resetTodayBtn"),
+  hardResetBtn: document.getElementById("hardResetBtn"),
+  addQuestBtn: document.getElementById("addQuestBtn"),
+  exportBtn: document.getElementById("exportBtn"),
+  curfewShow: document.getElementById("curfewShow"),
+
+  settingsBtn: document.getElementById("settingsBtn"),
+  settingsDialog: document.getElementById("settingsDialog"),
+  nameInput: document.getElementById("nameInput"),
+  curfewInput: document.getElementById("curfewInput"),
+  saveSettingsBtn: document.getElementById("saveSettingsBtn"),
+
+  addSkillBtn: document.getElementById("addSkillBtn"),
+};
+
+function xpNeededForLevel(){ return 100; }
+function skillXpToLevel(){ return 50; } // cada 50 sube nivel skill
+
+function coreDoneCount(){
+  const coreIds = state.questsTemplate.filter(q=>q.tag==="core").map(q=>q.id);
+  return coreIds.filter(id => (state.days[day].questStatus[id] || "skip") === "done").length;
+}
+function isGamingUnlocked(){
+  return coreDoneCount() >= 3;
+}
+
+function tagBadge(tag){
+  if(tag==="core") return `<span class="tag core">Core</span>`;
+  if(tag==="virtue") return `<span class="tag virtue">Virtue</span>`;
+  if(tag==="rule") return `<span class="tag rule">Regla</span>`;
+  return `<span class="tag">Bonus</span>`;
+}
+
+function render(){
+  els.todayLine.textContent = `Hoy: ${day} • Zona: ${TZ}`;
+  els.name.textContent = state.profile.name || "Victor";
+  els.level.textContent = state.game.level;
+  els.streak.textContent = state.game.streak;
+  els.rank.textContent = rankFor(state.game.level);
+
+  els.curfewShow.textContent = fmtTimeTo12h(state.config.curfew);
+
+  els.hp.textContent = state.game.hp;
+  els.xp.textContent = state.game.xp;
+  els.xpTo.textContent = xpNeededForLevel();
+
+  els.gold.textContent = state.game.gold;
+  els.disc.textContent = state.game.disc;
+  els.tm.textContent = state.game.tm;
+
+  els.hpBar.style.width = `${state.game.hp}%`;
+  els.hpBar.style.background = state.game.hp >= 40 ? "var(--good)" : "var(--bad)";
+
+  els.xpBar.style.width = `${Math.round((state.game.xp / xpNeededForLevel()) * 100)}%`;
+
+  els.notes.value = state.days[day].notes || "";
+
+  // Quests
+  els.quests.innerHTML = "";
+  const gamingUnlocked = isGamingUnlocked();
+
+  state.questsTemplate.forEach(q=>{
+    const status = state.days[day].questStatus[q.id] || "skip";
+    const locked = q.lockedByCore && !gamingUnlocked;
+    const div = document.createElement("div");
+    div.className = "quest" + (locked ? " locked" : "");
+    div.innerHTML = `
+      <input type="checkbox" ${status==="done" ? "checked":""} ${locked ? "disabled":""} />
+      <div style="min-width:180px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <b>${q.name}</b>
+          ${tagBadge(q.tag)}
+          ${locked ? `<span class="tag rule">Bloqueado</span>` : ``}
+        </div>
+        <div class="mini">✅ +${q.xp} XP • ❌ ${q.hpFail} HP</div>
+        ${q.id==="q_game" ? `<div class="mini">Se desbloquea al completar <b>Core x3</b>. (Ahora: ${coreDoneCount()}/3)</div>` : ``}
+      </div>
+      <div class="meta">
+        <div>${status==="done" ? "✅ Hecha" : status==="fail" ? "❌ Fallo" : "—"}</div>
+        <button class="badB" style="padding:6px 10px" data-fail="${q.id}" ${locked ? "disabled":""}>Marcar ❌</button>
+      </div>
+    `;
+
+    const checkbox = div.querySelector('input[type="checkbox"]');
+    checkbox.addEventListener("change", ()=>{
+      state.days[day].questStatus[q.id] = checkbox.checked ? "done" : "skip";
+      save(); render();
+    });
+
+    div.querySelector("button[data-fail]").addEventListener("click", ()=>{
+      state.days[day].questStatus[q.id] = "fail";
+      save(); render();
+    });
+
+    els.quests.appendChild(div);
+  });
+
+  // Skills
+  els.skills.innerHTML = "";
+  state.skills.forEach(s=>{
+    const to = skillXpToLevel();
+    const pct = Math.round((s.xp / to) * 100);
+    const div = document.createElement("div");
+    div.className = "skill";
+    div.innerHTML = `
+      <div class="skillTitle">
+        <b>${s.name}</b>
+        <span class="pill">Lv <b>${s.level}</b></span>
+      </div>
+      <div class="mini">Skill XP: <b>${s.xp}</b> / ${to}</div>
+      <div class="bar" style="margin-top:8px"><div style="width:${pct}%;background:var(--accent)"></div></div>
+      <div class="skillBtns">
+        <button data-skill="${s.id}" data-add="10" class="goodB">+1 sesión (+10)</button>
+        <button data-skill="${s.id}" data-add="20">+2 sesiones (+20)</button>
+      </div>
+      <div class="mini">Al subir nivel de skill: <b>+10 XP global</b> + mini heal.</div>
+    `;
+    div.querySelectorAll("button[data-skill]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const add = Number(btn.getAttribute("data-add"));
+        addSkillXP(s.id, add);
+      });
+    });
+    els.skills.appendChild(div);
+  });
+
+  // Loot list
+  els.lootList.innerHTML = "";
+  state.loot.rules.forEach(r=>{
+    const ready = state.game.streak >= (r.requires.streak || 0);
+    const claimed = !!state.loot.claimed[r.key];
+    const statusTxt = claimed ? "✅ Reclamado" : ready ? "🎁 Disponible" : `🔒 Requiere racha ${r.requires.streak}`;
+    const li = document.createElement("li");
+    li.textContent = `${r.title} — ${statusTxt}`;
+    els.lootList.appendChild(li);
+  });
+
+  // History
+  const keys = Object.keys(state.days).sort().slice(-7);
+  els.history.innerHTML = keys.reverse().map(k=>{
+    const d = state.days[k];
+    const done = Object.values(d.questStatus||{}).filter(v=>v==="done").length;
+    const fail = Object.values(d.questStatus||{}).filter(v=>v==="fail").length;
+    const s = d.summary || {xpGained:0,hpDelta:0};
+    const hpSign = s.hpDelta >= 0 ? "+" : "";
+    return `<div>📅 <b>${k}</b> • ✅ ${done} • ❌ ${fail} • Core ${d.coreDone||0}/3 • XP +${s.xpGained} • HP ${hpSign}${s.hpDelta}</div>`;
+  }).join("");
+}
+
+function addSkillXP(skillId, amount){
+  const s = state.skills.find(x=>x.id===skillId);
+  if(!s) return;
+  s.xp += amount;
+
+  let leveled = false;
+  while(s.xp >= skillXpToLevel()){
+    s.xp -= skillXpToLevel();
+    s.level += 1;
+    leveled = true;
+
+    // reward: global XP + mini heal
+    state.game.xp += 10;
+    state.game.hp = clamp(state.game.hp + 5, 0, 100);
+  }
+
+  // global level-ups if XP crossed
+  while(state.game.xp >= xpNeededForLevel()){
+    state.game.xp -= xpNeededForLevel();
+    state.game.level += 1;
+    state.game.hp = clamp(state.game.hp + 10, 0, 100);
+  }
+
+  save();
+  toast(leveled ? `🎉 ${s.name} subió de nivel!` : `+${amount} Skill XP en ${s.name}`);
+  render();
+}
+
+function applyDayResults(){
+  let xpGain = 0;
+  let hpDelta = 0;
+
+  // If gaming is locked, ignore its status (so it can't be exploited)
+  const gamingUnlocked = isGamingUnlocked();
+
+  for(const q of state.questsTemplate){
+    const st = state.days[day].questStatus[q.id] || "skip";
+    const locked = q.lockedByCore && !gamingUnlocked;
+    if(locked) continue;
+
+    if(st==="done") xpGain += q.xp;
+    if(st==="fail") hpDelta += q.hpFail;
+  }
+
+  // Core logic for streak
+  const coreDone = coreDoneCount();
+  state.days[day].coreDone = coreDone;
+  const passDay = coreDone >= 3; // esto define la racha
+
+  // streak update (consecutive by day key)
+  const last = state.game.lastDayKey;
+  if(passDay){
+    if(last){
+      const lastDate = new Date(last + "T12:00:00");
+      const todayDate = new Date(day + "T12:00:00");
+      const diffDays = Math.round((todayDate - lastDate) / (1000*60*60*24));
+      if(diffDays === 1) state.game.streak += 1;
+      else state.game.streak = 1;
+    } else {
+      state.game.streak = 1;
+    }
+    state.game.lastDayKey = day;
+
+    // small healing for consistency
+    if(state.game.streak === 3) hpDelta += 10;
+    if(state.game.streak === 7) hpDelta += 10;
+  } else {
+    // Soft break
+    state.game.streak = 0;
+  }
+
+  // Extra stats
+  if(passDay) state.game.disc += 1;
+
+  // Time Management points: if gaming done and core passed -> +1, if gaming fail -> -1
+  const gStatus = state.days[day].questStatus["q_game"] || "skip";
+  if(passDay && gStatus==="done") state.game.tm += 1;
+  if(gStatus==="fail") state.game.tm = Math.max(0, state.game.tm - 1);
+
+  // Gold: saving quest gives gold
+  if((state.days[day].questStatus["q_save"] || "skip") === "done") state.game.gold += 10;
+
+  // Apply
+  state.game.xp += xpGain;
+  state.game.hp = clamp(state.game.hp + hpDelta, 0, 100);
+
+  // Level up
+  while(state.game.xp >= xpNeededForLevel()){
+    state.game.xp -= xpNeededForLevel();
+    state.game.level += 1;
+    state.game.hp = clamp(state.game.hp + 10, 0, 100);
+  }
+
+  state.days[day].summary = { xpGained: xpGain, hpDelta: hpDelta };
+
+  // Auto-claimable loot hint
+  const available = state.loot.rules.filter(r => !state.loot.claimed[r.key] && state.game.streak >= (r.requires.streak||0));
+  if(available.length) toast(`🎁 Tienes loot disponible (${available.length})`);
+  save();
+}
+
+/** ===== Events ===== **/
+els.notes.addEventListener("input", ()=>{
+  state.days[day].notes = els.notes.value;
+  save();
+});
+
+els.endDayBtn.addEventListener("click", ()=>{
+  applyDayResults();
+  toast("✅ Día guardado");
+  render();
+});
+
+els.resetTodayBtn.addEventListener("click", ()=>{
+  if(!confirm("¿Seguro? Esto reinicia solo el día de hoy.")) return;
+  state.days[day] = { questStatus:{}, notes:"", summary:{xpGained:0,hpDelta:0}, coreDone:0 };
+  save();
+  render();
+});
+
+els.hardResetBtn.addEventListener("click", ()=>{
+  if(!confirm("Esto borra TODO el progreso. ¿Seguro?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = load();
+  state.days[todayKey()] = { questStatus:{}, notes:"", summary:{xpGained:0,hpDelta:0}, coreDone:0 };
+  save(); render();
+});
+
+els.addQuestBtn.addEventListener("click", ()=>{
+  const name = prompt("Nombre de la misión:");
+  if(!name) return;
+  const xp = Number(prompt("XP por completarla (ej: 10)", "10"));
+  const hpFail = Number(prompt("HP si fallas (negativo) (ej: -5)", "-5"));
+  const tag = prompt("Tipo: core / virtue / bonus / rule", "bonus") || "bonus";
+  const lockedByCore = (tag==="rule") ? confirm("¿Debe estar bloqueada hasta Core x3?") : false;
+
+  state.questsTemplate.push({
+    id:"q_"+uid(),
+    name,
+    xp: isFinite(xp)?xp:10,
+    hpFail: isFinite(hpFail)?hpFail:-5,
+    tag: ["core","virtue","bonus","rule"].includes(tag) ? tag : "bonus",
+    lockedByCore
+  });
+  save(); render();
+});
+
+els.addSkillBtn.addEventListener("click", ()=>{
+  const name = prompt("Nombre de la skill (ej: Planche, Running, Spanish, etc.):");
+  if(!name) return;
+  state.skills.push({ id:"s_"+uid(), name, xp:0, level:1 });
+  save(); render();
+});
+
+els.exportBtn.addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "victor_rpg_2026_export.json";
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+els.settingsBtn.addEventListener("click", ()=>{
+  els.nameInput.value = state.profile.name || "Victor";
+  els.curfewInput.value = state.config.curfew || "00:30";
+  els.settingsDialog.showModal();
+});
+
+els.saveSettingsBtn.addEventListener("click", ()=>{
+  state.profile.name = (els.nameInput.value || "Victor").trim();
+  state.config.curfew = els.curfewInput.value || "00:30";
+  save();
+  toast("⚙️ Ajustes guardados");
+  render();
+});
+
+els.claimLootBtn.addEventListener("click", ()=>{
+  const available = state.loot.rules.filter(r => !state.loot.claimed[r.key] && state.game.streak >= (r.requires.streak||0));
+  if(!available.length){
+    alert("No tienes loot disponible todavía. Sigue la racha 😈");
+    return;
+  }
+  const lines = available.map(r=>`- ${r.title} (+${r.xpBonus} XP, +${r.goldBonus} oro)`).join("\n");
+  const ok = confirm(`Loot disponible:\n${lines}\n\n¿Reclamar todo ahora?`);
+  if(!ok) return;
+
+  available.forEach(r=>{
+    state.loot.claimed[r.key] = true;
+    state.game.xp += (r.xpBonus || 0);
+    state.game.gold += (r.goldBonus || 0);
+    state.game.hp = clamp(state.game.hp + 5, 0, 100);
+  });
+
+  while(state.game.xp >= xpNeededForLevel()){
+    state.game.xp -= xpNeededForLevel();
+    state.game.level += 1;
+    state.game.hp = clamp(state.game.hp + 10, 0, 100);
+  }
+
+  save();
+  toast("🎁 Loot reclamado");
+  render();
+});
+
+// Initial render
+render();
+
+/** ===== PWA registration ===== **/
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").catch(()=>{});
+}
+</script>
+</main>
+</body>
+</html>
